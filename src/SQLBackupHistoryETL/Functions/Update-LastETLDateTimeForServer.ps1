@@ -9,6 +9,13 @@ Function Update-LastETLDateTimeForServer {
         [ValidateNotNullOrEmpty()]
         $TargetDatabase,
 
+        [Parameter(Mandatory = $false)]
+        [pscredential]
+        $TargetCredentialObject,
+
+        [Parameter(Mandatory = $false)]
+        $TargetAzureDBCertificateAuth,
+
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $SourceServerToUpdate,
@@ -16,11 +23,7 @@ Function Update-LastETLDateTimeForServer {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Datetime]
-        $MaxETLDateTime,
-
-        [Parameter(Mandatory = $false)]
-        [pscredential]
-        $CredentialObject
+        $MaxETLDateTime
 
     )
   
@@ -34,9 +37,21 @@ Function Update-LastETLDateTimeForServer {
 "@
 
     try {
+
+        if ($TargetAzureDBCertificateAuth) {
+            $conn = New-AzureSQLDbConnectionWithCert -AzureSQLDBServerName $TargetServerInstance `
+                -DatabaseName $TargetDatabase `
+                -TenantID $TargetAzureDBCertificateAuth.TenantID `
+                -ClientID $TargetAzureDBCertificateAuth.ClientID `
+                -FullCertificatePath $TargetAzureDBCertificateAuth.FullCertificatePath
+
+            #Using Invoke-Sqlcmd2 to be able to pass in an existing connection
+            Invoke-Sqlcmd2 -SQLConnection $conn -query $query -ErrorAction Stop
+            $conn.Close()
+        }
         
-        if ($CredentialObject) {
-            Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $CredentialObject -ErrorAction Stop
+        elseif ($TargetCredentialObject) {
+            Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $TargetCredentialObject -ErrorAction Stop
         }
 
         else {
@@ -48,6 +63,11 @@ Function Update-LastETLDateTimeForServer {
     catch {
         Write-Error "Failed to update max ETLDateTime for SourceServer: $SourceServerToUpdate on target Server: $ServerInstance"
         Write-Error "Error Message: $_.Exception.Message"
+
+        if($conn){
+            $conn.Close()
+        }
+
         exit
     }
 
