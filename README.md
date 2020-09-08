@@ -26,8 +26,8 @@ $TargetServerInstance = "myazuredbserver.database.windows.net"
 $TargetDatabase = "DBADatabase"
 $TargetAzureDBCertificateAuth = @{TenantID = <AzureTenantIDHere>; ClientID = <AzureClientIDHere>; FullCertificatePath = "Cert:\LocalMachine\My\<CertificateThumbprintHere>"}
 
-Invoke-SQLBackupHistoryETL -TargetServerInstance $ServerInstance `
-                            -TargetDatabase "DBAdmin" `
+Invoke-SQLBackupHistoryETL -TargetServerInstance $TargetServerInstance `
+                            -TargetDatabase $TargetDatabase `
                             -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth
 ```
 
@@ -48,8 +48,8 @@ $TargetDatabase = "DBADatabase"
 [pscredential]$targetcredObject = New-Object System.Management.Automation.PSCredential ($targetuserName, $targetsecStringPassword)
 
 
-Invoke-SQLBackupHistoryETL -TargetServerInstance $ServerInstance `
-                            -TargetDatabase "DBAdmin" `
+Invoke-SQLBackupHistoryETL -TargetServerInstance $TargetServerInstance `
+                            -TargetDatabase $TargetDatabase `
                             -TargetCredentialObject $targetcredObject `
                             -SourceCredentialObject $sourcecredObject
 ```
@@ -61,7 +61,7 @@ Invoke-SQLBackupHistoryETL -TargetServerInstance $ServerInstance `
 $TargetServerInstance = "myazuredbserver.database.windows.net"
 $TargetDatabase = "DBADatabase"
 
-Invoke-SQLBackupHistoryETL -TargetServerInstance $ServerInstance `
-                            -TargetDatabase "DBAdmin"
+Invoke-SQLBackupHistoryETL -TargetServerInstance $TargetServerInstance `
+                            -TargetDatabase $TargetDatabase
 ```
 
