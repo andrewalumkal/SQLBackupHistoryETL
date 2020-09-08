@@ -11,7 +11,10 @@ Function Get-AllSourceServersToETL {
 
         [Parameter(Mandatory = $false)]
         [pscredential]
-        $CredentialObject
+        $TargetCredentialObject,
+
+        [Parameter(Mandatory = $false)]
+        $TargetAzureDBCertificateAuth
 
     )
   
@@ -25,8 +28,20 @@ Function Get-AllSourceServersToETL {
 
     try {
 
-        if ($CredentialObject) {
-            $SourceServers = Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $CredentialObject -ErrorAction Stop
+        if ($TargetAzureDBCertificateAuth) {
+            $conn = New-AzureSQLDbConnectionWithCert -AzureSQLDBServerName $TargetServerInstance `
+                -DatabaseName $TargetDatabase `
+                -TenantID $TargetAzureDBCertificateAuth.TenantID `
+                -ClientID $TargetAzureDBCertificateAuth.ClientID `
+                -FullCertificatePath $TargetAzureDBCertificateAuth.FullCertificatePath
+
+            #Using Invoke-Sqlcmd2 to be able to pass in an existing connection
+            $SourceServers = Invoke-Sqlcmd2 -SQLConnection $conn -query $query -ErrorAction Stop
+            $conn.Close()
+        }
+
+        elseif ($TargetCredentialObject) {
+            $SourceServers = Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $TargetCredentialObject -ErrorAction Stop
         }
 
         else {
@@ -40,6 +55,11 @@ Function Get-AllSourceServersToETL {
     catch {
         Write-Error "Failed to retrieve servers to ETL from Server: $ServerInstance"
         Write-Error "Error Message: $_.Exception.Message"
+
+        if($conn){
+            $conn.Close()
+        }
+
         exit
     }
 

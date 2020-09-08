@@ -10,17 +10,26 @@ Function Invoke-SQLBackupHistoryETL {
         $TargetDatabase,
 
         [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
         [pscredential]
         $TargetCredentialObject,
 
         [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        $TargetAzureDBCertificateAuth,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
         [pscredential]
         $SourceCredentialObject
 
     )
   
     #Get all source SQL Servers along with ETL markers
-    $AllSourceServers = Get-AllSourceServersToETL -TargetServerInstance $TargetServerInstance -TargetDatabase $TargetDatabase -CredentialObject $TargetCredentialObject
+    $AllSourceServers = Get-AllSourceServersToETL -TargetServerInstance $TargetServerInstance `
+        -TargetDatabase $TargetDatabase `
+        -TargetCredentialObject $TargetCredentialObject `
+        -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth
 
     foreach ($SourceServer in $AllSourceServers) {
 
@@ -36,28 +45,17 @@ Function Invoke-SQLBackupHistoryETL {
 
             Write-output "ETLing $($AllHistory.Count) records for $($SourceServer.ServerName)"
 
-            #Inserting records one by one. Using this method since Write-SqlTableData does not support Azure SQL DB
-            foreach ($HistoryRecord in $AllHistory) {
-                Add-BackupHistoryRecord -TargetServerInstance $TargetServerInstance `
-                    -TargetDatabase $TargetDatabase `
-                    -CredentialObject $TargetCredentialObject `
-                    -database_name $HistoryRecord.database_name `
-                    -BackupType $HistoryRecord.BackupType `
-                    -physical_device_name $HistoryRecord.physical_device_name `
-                    -backup_start_date $HistoryRecord.backup_start_date `
-                    -backup_finish_date $HistoryRecord.backup_finish_date `
-                    -server_name $HistoryRecord.server_name `
-                    -recovery_model $HistoryRecord.recovery_model `
-                    -first_lsn $HistoryRecord.first_lsn `
-                    -last_lsn $HistoryRecord.last_lsn `
-                    -UncompressedSizeMB $HistoryRecord.UncompressedSizeMB `
-                    -CompressedSizeMB $HistoryRecord.CompressedSizeMB
-            }
+            Add-BackupHistoryToTarget -TargetServerInstance $TargetServerInstance `
+                -TargetDatabase $TargetDatabase `
+                -TargetCredentialObject $TargetCredentialObject `
+                -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth `
+                -HistoryRecordsObject $AllHistory
 
 
             Update-LastETLDateTimeForServer -TargetServerInstance $TargetServerInstance `
                 -TargetDatabase $TargetDatabase `
-                -CredentialObject $TargetCredentialObject `
+                -TargetCredentialObject $TargetCredentialObject `
+                -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth `
                 -SourceServerToUpdate $SourceServer.ServerName `
                 -MaxETLDateTime $MaxETLDateTime `
     
