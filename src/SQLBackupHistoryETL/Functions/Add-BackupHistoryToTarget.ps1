@@ -75,7 +75,8 @@ Function Add-BackupHistoryToTarget {
                                                 ,@physical_device_name = N'$($HistoryRecord.physical_device_name)'                 
                                                 ,@backup_start_date = '$($HistoryRecord.backup_start_date)'  
                                                 ,@backup_finish_date = '$($HistoryRecord.backup_finish_date)' 
-                                                ,@server_name = N'$($HistoryRecord.server_name)'                          
+                                                ,@server_name = N'$($HistoryRecord.server_name)'
+                                                ,@ag_name = N'$($HistoryRecord.ag_name)'                          
                                                 ,@recovery_model = '$($HistoryRecord.recovery_model)'                        
                                                 ,@first_lsn = $($HistoryRecord.first_lsn)                           
                                                 ,@last_lsn = $($HistoryRecord.last_lsn)                            

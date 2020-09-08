@@ -13,6 +13,7 @@ create table Utility.SQLBackupHistoryConsolidated
    ,[backup_start_date]    datetime       not null
    ,[backup_finish_date]   datetime       not null
    ,[server_name]          nvarchar(250)  null
+   ,[ag_name]              nvarchar(250)  null 
    ,[recovery_model]       varchar(10)    null
    ,[first_lsn]            numeric(25, 0) not null
    ,[last_lsn]             numeric(25, 0) not null
@@ -48,6 +49,7 @@ create or alter proc Utility.InsertSQLBackupHistory
    ,@backup_start_date    datetime
    ,@backup_finish_date   datetime
    ,@server_name          nvarchar(250)
+   ,@ag_name              nvarchar(250)
    ,@recovery_model       varchar(10)
    ,@first_lsn            numeric(25, 0)
    ,@last_lsn             numeric(25, 0)
@@ -67,6 +69,7 @@ begin
        ,backup_start_date
        ,backup_finish_date
        ,server_name
+       ,ag_name
        ,recovery_model
        ,first_lsn
        ,last_lsn
@@ -75,7 +78,7 @@ begin
     )
     values
     (@database_name, @BackupType, @physical_device_name, @backup_start_date
-    ,@backup_finish_date, @server_name, @recovery_model, @first_lsn
+    ,@backup_finish_date, @server_name, @ag_name, @recovery_model, @first_lsn
     ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB);
 
 end;
