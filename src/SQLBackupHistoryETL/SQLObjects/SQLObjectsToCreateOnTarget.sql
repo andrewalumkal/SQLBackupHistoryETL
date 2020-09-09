@@ -83,3 +83,171 @@ begin
 
 end;
 go
+
+
+create or alter proc Utility.GetLatestFullBackupFromSQLBackupHistoryConsolidated
+    @DatabaseName nvarchar(200)
+   ,@ServerName   nvarchar(250)
+as
+begin
+
+
+    drop table if exists #BackupHistory;
+    create table #BackupHistory
+    (
+        [BackupPath]       nvarchar(500)  null
+       ,[BackupStartDate]  datetime       not null
+       ,[BackupFinishDate] datetime       not null
+       ,[FirstLSN]         numeric(25, 0) not null
+       ,[LastLSN]          numeric(25, 0) not null
+       ,[BackupType]       varchar(10)    not null
+       ,[Rank]             int            not null
+    );
+
+    insert into #BackupHistory
+    (
+        BackupPath
+       ,BackupStartDate
+       ,BackupFinishDate
+       ,FirstLSN
+       ,LastLSN
+       ,BackupType
+       ,[Rank]
+    )
+    select  sbhc.physical_device_name
+           ,sbhc.backup_start_date
+           ,sbhc.backup_finish_date
+           ,sbhc.first_lsn
+           ,sbhc.last_lsn
+           ,sbhc.BackupType
+           ,dense_rank() over (order by sbhc.last_lsn desc) as [Rank]
+    from    Utility.SQLBackupHistoryConsolidated sbhc
+    where   sbhc.BackupType = 'Full'
+    and     sbhc.database_name = @DatabaseName
+    and     sbhc.server_name = @ServerName;
+
+    --If no backups found using servername, check for backups using AG Name
+    if @@ROWCOUNT = 0
+    begin
+
+        insert into #BackupHistory
+        (
+            BackupPath
+           ,BackupStartDate
+           ,BackupFinishDate
+           ,FirstLSN
+           ,LastLSN
+           ,BackupType
+           ,[Rank]
+        )
+        select  sbhc.physical_device_name
+               ,sbhc.backup_start_date
+               ,sbhc.backup_finish_date
+               ,sbhc.first_lsn
+               ,sbhc.last_lsn
+               ,sbhc.BackupType
+               ,dense_rank() over (order by sbhc.last_lsn desc) as [Rank]
+        from    Utility.SQLBackupHistoryConsolidated sbhc
+        where   sbhc.BackupType = 'Full'
+        and     sbhc.database_name = @DatabaseName
+        and     sbhc.ag_name = @ServerName;
+
+    end;
+
+    select  @DatabaseName as DatabaseName
+           ,bh.BackupPath
+           ,bh.BackupStartDate
+           ,bh.BackupFinishDate
+           ,bh.FirstLSN
+           ,bh.LastLSN
+           ,bh.BackupType
+    from    #BackupHistory as bh
+    where   bh.[Rank] = 1;
+
+end;
+go
+
+
+
+
+create or alter proc Utility.GetRemainingLogBackupsFromSQLBackupHistoryConsolidated
+    @DatabaseName nvarchar(200)
+   ,@ServerName   nvarchar(250)
+   ,@LastLSN      numeric(25, 0)
+as
+begin
+
+
+    drop table if exists #BackupHistory;
+    create table #BackupHistory
+    (
+        [BackupPath]       nvarchar(500)  null
+       ,[BackupStartDate]  datetime       not null
+       ,[BackupFinishDate] datetime       not null
+       ,[FirstLSN]         numeric(25, 0) not null
+       ,[LastLSN]          numeric(25, 0) not null
+       ,[BackupType]       varchar(10)    not null
+    );
+
+
+    insert into #BackupHistory
+    (
+        BackupPath
+       ,BackupStartDate
+       ,BackupFinishDate
+       ,FirstLSN
+       ,LastLSN
+       ,BackupType
+    )
+    select  sbhc.physical_device_name as BackupPath
+           ,sbhc.backup_start_date as BackupStartDate
+           ,sbhc.backup_finish_date as BackupFinishDate
+           ,sbhc.first_lsn as FirstLSN
+           ,sbhc.last_lsn as LastLSN
+           ,sbhc.BackupType
+    from    Utility.SQLBackupHistoryConsolidated as sbhc
+    where   sbhc.BackupType = 'Log'
+    and     sbhc.last_lsn > @LastLSN
+    and     sbhc.database_name = @DatabaseName
+    and     sbhc.server_name = @ServerName;
+
+
+    --If no backups found using servername, check for backups using AG Name
+    if @@ROWCOUNT = 0
+    begin
+
+        insert into #BackupHistory
+        (
+            BackupPath
+           ,BackupStartDate
+           ,BackupFinishDate
+           ,FirstLSN
+           ,LastLSN
+           ,BackupType
+        )
+        select  sbhc.physical_device_name as BackupPath
+               ,sbhc.backup_start_date as BackupStartDate
+               ,sbhc.backup_finish_date as BackupFinishDate
+               ,sbhc.first_lsn as FirstLSN
+               ,sbhc.last_lsn as LastLSN
+               ,sbhc.BackupType
+        from    Utility.SQLBackupHistoryConsolidated as sbhc
+        where   sbhc.BackupType = 'Log'
+        and     sbhc.last_lsn > @LastLSN
+        and     sbhc.database_name = @DatabaseName
+        and     sbhc.ag_name = @ServerName;
+
+    end;
+
+    select      bh.BackupPath
+               ,bh.BackupStartDate
+               ,bh.BackupFinishDate
+               ,bh.FirstLSN
+               ,bh.LastLSN
+               ,bh.BackupType
+    from        #BackupHistory as bh
+    order by    bh.LastLSN asc;
+
+
+end;
+go
