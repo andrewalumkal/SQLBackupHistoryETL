@@ -24,7 +24,7 @@ with (data_compression = page);
 
 alter table Utility.SQLBackupHistoryConsolidated add constraint PK_SQLBackupHistoryConsolidated primary key clustered (LogID) with (data_compression=page);
 
-alter table Utility.SQLBackupHistoryConsolidated add constraint UQ_SQLBackupHistoryConsolidated unique ([last_lsn],[first_lsn],[database_name]) with (data_compression=page,ignore_dup_key=on);
+alter table Utility.SQLBackupHistoryConsolidated add constraint UQ_SQLBackupHistoryConsolidated unique ([last_lsn],[first_lsn],[database_name],[physical_device_name]) with (data_compression=page,ignore_dup_key=on);
 
 create nonclustered index [IX_database_backupfinishdate] on Utility.SQLBackupHistoryConsolidated ([database_name],[backup_finish_date]) with (data_compression=page);
 
