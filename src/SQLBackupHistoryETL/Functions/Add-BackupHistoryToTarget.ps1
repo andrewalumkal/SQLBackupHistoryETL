@@ -81,7 +81,8 @@ Function Add-BackupHistoryToTarget {
                                                 ,@first_lsn = $($HistoryRecord.first_lsn)                           
                                                 ,@last_lsn = $($HistoryRecord.last_lsn)                            
                                                 ,@UncompressedSizeMB = $($HistoryRecord.UncompressedSizeMB)                     
-                                                ,@CompressedSizeMB = $($HistoryRecord.CompressedSizeMB); 
+                                                ,@CompressedSizeMB = $($HistoryRecord.CompressedSizeMB)
+                                                ,@is_copy_only = $($HistoryRecord.is_copy_only); 
         
 "@
 
