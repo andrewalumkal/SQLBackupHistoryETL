@@ -254,3 +254,131 @@ begin
 
 end;
 go
+
+
+create or alter proc Utility.GetLastDiffBackupFromSQLBackupHistoryConsolidated
+    @DatabaseName nvarchar(200)
+   ,@ServerName   nvarchar(250)
+   ,@LastLSN      numeric(25, 0)
+as
+begin
+
+
+    drop table if exists #BackupHistory;
+    create table #BackupHistory
+    (
+        [BackupPath]       nvarchar(500)  null
+       ,[BackupStartDate]  datetime       not null
+       ,[BackupFinishDate] datetime       not null
+       ,[FirstLSN]         numeric(25, 0) not null
+       ,[LastLSN]          numeric(25, 0) not null
+       ,[BackupType]       varchar(10)    not null
+       ,[is_copy_only]     bit            null
+    );
+
+
+    insert into #BackupHistory
+    (
+        BackupPath
+       ,BackupStartDate
+       ,BackupFinishDate
+       ,FirstLSN
+       ,LastLSN
+       ,BackupType
+       ,is_copy_only
+    )
+    select  sbhc.physical_device_name as BackupPath
+           ,sbhc.backup_start_date as BackupStartDate
+           ,sbhc.backup_finish_date as BackupFinishDate
+           ,sbhc.first_lsn as FirstLSN
+           ,sbhc.last_lsn as LastLSN
+           ,sbhc.BackupType
+           ,sbhc.is_copy_only
+    from    Utility.SQLBackupHistoryConsolidated as sbhc
+    where   sbhc.BackupType in ( 'Diff', 'Full' )
+    and     sbhc.last_lsn > @LastLSN
+    and     sbhc.database_name = @DatabaseName
+    and     sbhc.server_name = @ServerName;
+
+
+    --If no backups found using servername, check for backups using AG Name
+    if @@ROWCOUNT = 0
+    begin
+
+        insert into #BackupHistory
+        (
+            BackupPath
+           ,BackupStartDate
+           ,BackupFinishDate
+           ,FirstLSN
+           ,LastLSN
+           ,BackupType
+           ,is_copy_only
+        )
+        select  sbhc.physical_device_name as BackupPath
+               ,sbhc.backup_start_date as BackupStartDate
+               ,sbhc.backup_finish_date as BackupFinishDate
+               ,sbhc.first_lsn as FirstLSN
+               ,sbhc.last_lsn as LastLSN
+               ,sbhc.BackupType
+               ,sbhc.is_copy_only
+        from    Utility.SQLBackupHistoryConsolidated as sbhc
+        where   sbhc.BackupType in ( 'Diff', 'Full' )
+        and     sbhc.last_lsn > @LastLSN
+        and     sbhc.database_name = @DatabaseName
+        and     sbhc.ag_name = @ServerName;
+
+    end;
+
+    --Need to handle situations where there are new full backups after the LSN passed in. If so, we need to get only the latest diff backup prior to those full backups
+    if exists
+    (
+        select  *
+        from    #BackupHistory bh
+        where   bh.BackupType = 'Full'
+        and     bh.is_copy_only = 0
+    )
+    begin
+
+        declare @FullbackupLastLSN numeric(25, 0);
+        set @FullbackupLastLSN =
+        (
+            select      top 1   bh.LastLSN
+            from        #BackupHistory bh
+            where       bh.BackupType = 'Full'
+            and         bh.is_copy_only = 0
+            order by    bh.LastLSN asc
+        );
+
+        --Get only backups before this full backup
+        delete  from #BackupHistory
+        where   LastLSN >= @FullbackupLastLSN;
+
+    end
+
+    --Handle striped backups - there may be multiple files for a single diff backup
+
+    ;
+    with AvailableFullBackups
+    as (select  bh.BackupPath
+               ,bh.BackupStartDate
+               ,bh.BackupFinishDate
+               ,bh.FirstLSN
+               ,bh.LastLSN
+               ,bh.BackupType
+               ,dense_rank() over (order by bh.LastLSN desc) as [Rank]
+        from    #BackupHistory as bh
+        where   bh.BackupType = 'Diff')
+
+    select  afb.BackupPath
+           ,afb.BackupStartDate
+           ,afb.BackupFinishDate
+           ,afb.FirstLSN
+           ,afb.LastLSN
+           ,afb.BackupType
+    from    AvailableFullBackups afb
+    where   afb.[Rank] = 1;
+
+
+end;
+go
