@@ -19,6 +19,7 @@ create table Utility.SQLBackupHistoryConsolidated
    ,[last_lsn]             numeric(25, 0) not null
    ,[UncompressedSizeMB]   int            null
    ,[CompressedSizeMB]     int            null
+   ,[is_copy_only]         bit            null  
 )
 with (data_compression = page);
 
@@ -55,6 +56,7 @@ create or alter proc Utility.InsertSQLBackupHistory
    ,@last_lsn             numeric(25, 0)
    ,@UncompressedSizeMB   int
    ,@CompressedSizeMB     int
+   ,@is_copy_only         bit  
 as
 begin
 
@@ -75,11 +77,12 @@ begin
        ,last_lsn
        ,UncompressedSizeMB
        ,CompressedSizeMB
+       ,is_copy_only
     )
     values
     (@database_name, @BackupType, @physical_device_name, @backup_start_date
     ,@backup_finish_date, @server_name, @ag_name, @recovery_model, @first_lsn
-    ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB);
+    ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB, @is_copy_only);
 
 end;
 go
