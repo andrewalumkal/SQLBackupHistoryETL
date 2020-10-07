@@ -43,7 +43,7 @@ Function Get-BackupHistoryToETL {
     join        msdb.dbo.backupmediafamily m
     on          s.media_set_id = m.media_set_id
 
-    join        sys.databases as d
+    left join   sys.databases as d
     on          d.name = s.database_name
 
     left join   #tmp_hadr_database_replica_states as rs
