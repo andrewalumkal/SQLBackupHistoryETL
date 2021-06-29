@@ -39,6 +39,9 @@ Function Get-BackupHistoryToETL {
             ,convert(bigint, s.backup_size / 1048576) as [UncompressedSizeMB]
             ,convert(bigint, s.compressed_backup_size / 1048576) as [CompressedSizeMB]
             ,s.is_copy_only
+            ,s.encryptor_type
+            ,s.key_algorithm
+            ,s.encryptor_thumbprint
     from        msdb.dbo.backupset s
     join        msdb.dbo.backupmediafamily m
     on          s.media_set_id = m.media_set_id
