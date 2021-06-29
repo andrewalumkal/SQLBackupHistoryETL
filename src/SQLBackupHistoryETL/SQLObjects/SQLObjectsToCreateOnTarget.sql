@@ -22,7 +22,6 @@ create table Utility.SQLBackupHistoryConsolidated
    ,[is_copy_only]         bit            null
    ,[encryptor_type]       nvarchar(32)   null
    ,[key_algorithm]        nvarchar(32)   null
-   ,[encryptor_thumbprint] varbinary(64)  null  
 )
 with (data_compression = page);
 
@@ -62,7 +61,6 @@ create or alter proc Utility.InsertSQLBackupHistory
    ,@is_copy_only         bit = null
    ,@encryptor_type       nvarchar(32) = null
    ,@key_algorithm        nvarchar(32) = null
-   ,@encryptor_thumbprint varbinary(64) = null
 as
 begin
 
@@ -86,12 +84,11 @@ begin
        ,is_copy_only
        ,encryptor_type
        ,key_algorithm
-       ,encryptor_thumbprint
     )
     values
     (@database_name, @BackupType, @physical_device_name, @backup_start_date
     ,@backup_finish_date, @server_name, @ag_name, @recovery_model, @first_lsn
-    ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB, @is_copy_only,@encryptor_type,@key_algorithm,@encryptor_thumbprint);
+    ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB, @is_copy_only,@encryptor_type,@key_algorithm);
 
 end;
 go
