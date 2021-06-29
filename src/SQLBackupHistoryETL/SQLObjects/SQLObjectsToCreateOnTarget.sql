@@ -19,7 +19,10 @@ create table Utility.SQLBackupHistoryConsolidated
    ,[last_lsn]             numeric(25, 0) not null
    ,[UncompressedSizeMB]   int            null
    ,[CompressedSizeMB]     int            null
-   ,[is_copy_only]         bit            null  
+   ,[is_copy_only]         bit            null
+   ,[encryptor_type]       nvarchar(32)   null
+   ,[key_algorithm]        nvarchar(32)   null
+   ,[encryptor_thumbprint] varbinary(64)  null  
 )
 with (data_compression = page);
 
@@ -46,17 +49,20 @@ go
 create or alter proc Utility.InsertSQLBackupHistory
     @database_name        nvarchar(200)
    ,@BackupType           varchar(10)
-   ,@physical_device_name nvarchar(500)
+   ,@physical_device_name nvarchar(500) = null
    ,@backup_start_date    datetime
    ,@backup_finish_date   datetime
-   ,@server_name          nvarchar(250)
-   ,@ag_name              nvarchar(250)
-   ,@recovery_model       varchar(10)
+   ,@server_name          nvarchar(250) = null
+   ,@ag_name              nvarchar(250) = null
+   ,@recovery_model       varchar(10) = null
    ,@first_lsn            numeric(25, 0)
    ,@last_lsn             numeric(25, 0)
-   ,@UncompressedSizeMB   int
-   ,@CompressedSizeMB     int
-   ,@is_copy_only         bit  
+   ,@UncompressedSizeMB   int = null
+   ,@CompressedSizeMB     int = null
+   ,@is_copy_only         bit = null
+   ,@encryptor_type       nvarchar(32) = null
+   ,@key_algorithm        nvarchar(32) = null
+   ,@encryptor_thumbprint varbinary(64) = null
 as
 begin
 
@@ -78,11 +84,14 @@ begin
        ,UncompressedSizeMB
        ,CompressedSizeMB
        ,is_copy_only
+       ,encryptor_type
+       ,key_algorithm
+       ,encryptor_thumbprint
     )
     values
     (@database_name, @BackupType, @physical_device_name, @backup_start_date
     ,@backup_finish_date, @server_name, @ag_name, @recovery_model, @first_lsn
-    ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB, @is_copy_only);
+    ,@last_lsn, @UncompressedSizeMB, @CompressedSizeMB, @is_copy_only,@encryptor_type,@key_algorithm,@encryptor_thumbprint);
 
 end;
 go
