@@ -83,8 +83,8 @@ Function Add-BackupHistoryToTarget {
                                                 ,@UncompressedSizeMB = $($HistoryRecord.UncompressedSizeMB)                     
                                                 ,@CompressedSizeMB = $($HistoryRecord.CompressedSizeMB)
                                                 ,@is_copy_only = $($HistoryRecord.is_copy_only)
-                                                ,@encryptor_type = $($HistoryRecord.encryptor_type)
-                                                ,@key_algorithm = $($HistoryRecord.key_algorithm)
+                                                ,@encryptor_type = N'$($HistoryRecord.encryptor_type)'
+                                                ,@key_algorithm = N'$($HistoryRecord.key_algorithm)'
                                                 ,@encryptor_thumbprint = $($HistoryRecord.encryptor_thumbprint); 
         
 "@
