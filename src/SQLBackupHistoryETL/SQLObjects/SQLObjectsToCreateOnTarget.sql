@@ -29,7 +29,9 @@ alter table Utility.SQLBackupHistoryConsolidated add constraint PK_SQLBackupHist
 
 alter table Utility.SQLBackupHistoryConsolidated add constraint UQ_SQLBackupHistoryConsolidated unique ([last_lsn],[first_lsn],[database_name],[physical_device_name]) with (data_compression=page,ignore_dup_key=on);
 
-create nonclustered index [IX_database_backupfinishdate] on Utility.SQLBackupHistoryConsolidated ([database_name],[BackupType],[backup_finish_date]) with (data_compression=page);
+create nonclustered index [IX_database_server] ON [Utility].[SQLBackupHistoryConsolidated] ([database_name],[server_name], [BackupType], [last_lsn]) WITH (DATA_COMPRESSION = PAGE)
+
+create nonclustered index [IX_database_ag] ON [Utility].[SQLBackupHistoryConsolidated] ([database_name],[ag_name], [BackupType], [last_lsn]) WITH (DATA_COMPRESSION = PAGE)
 
 go
 
