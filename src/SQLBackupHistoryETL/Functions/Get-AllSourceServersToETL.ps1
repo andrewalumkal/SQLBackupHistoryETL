@@ -60,7 +60,7 @@ Function Get-AllSourceServersToETL {
             $conn.Close()
         }
 
-        exit
+        exit 1
     }
 
     
