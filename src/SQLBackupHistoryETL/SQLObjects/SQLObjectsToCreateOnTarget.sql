@@ -33,6 +33,7 @@ create nonclustered index [IX_database_server] ON [Utility].[SQLBackupHistoryCon
 
 create nonclustered index [IX_database_ag] ON [Utility].[SQLBackupHistoryConsolidated] ([database_name],[ag_name], [BackupType], [last_lsn]) WITH (DATA_COMPRESSION = PAGE)
 
+create nonclustered index [IX_backup_start_date] on [Utility].[SQLBackupHistoryConsolidated] (backup_start_date) WITH (DATA_COMPRESSION = PAGE)
 go
 
 create table Utility.SQLBackupHistorySourceServers
@@ -389,4 +390,32 @@ begin
 
 
 end;
+go
+
+create or alter proc Utility.CleanupSQLBackupHistoryConsolidated @BatchSize int = 500, @RetentionDays int = 180
+as
+begin
+
+	set nocount on;
+	set deadlock_priority low;
+	set xact_abort on;
+
+	declare @CleanupToDate datetime;
+	select @CleanupToDate = max(sbhc.backup_start_date) from Utility.SQLBackupHistoryConsolidated as sbhc
+	where sbhc.backup_start_date < dateadd(day,-1 * @RetentionDays,getutcdate())
+
+	while 1=1
+	begin
+
+		delete top (@BatchSize) from Utility.SQLBackupHistoryConsolidated
+		where backup_start_date < @CleanupToDate
+
+		if @@ROWCOUNT = 0
+		begin
+			return;
+		end
+
+	end
+
+end
 go
