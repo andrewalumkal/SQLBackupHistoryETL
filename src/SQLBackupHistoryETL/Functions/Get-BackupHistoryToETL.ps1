@@ -15,6 +15,9 @@ Function Get-BackupHistoryToETL {
         $CredentialObject
 
     )
+    
+    #Add a small buffer to fix missing rows
+    $LastETLDateTime = $LastETLDateTime.AddMinutes(-5)
   
     $query = @"
             
