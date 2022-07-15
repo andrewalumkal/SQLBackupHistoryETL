@@ -17,7 +17,6 @@ Function Get-AllSourceServersToETL {
         $TargetAzureDBCertificateAuth,
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
         $ServerListTable
 
     )
