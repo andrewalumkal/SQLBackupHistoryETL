@@ -23,11 +23,26 @@ Function Update-LastETLDateTimeForServer {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Datetime]
-        $MaxETLDateTime
+        $MaxETLDateTime,
+
+        [Parameter(Mandatory = $false)]
+        $ServerListTable
 
     )
-  
-    $query = @"
+    
+    if ($ServerListTable) {
+        $query = @"
+            
+    update  sbhss
+    set     sbhss.LastETLDatetime = '$($MaxETLDateTime)'
+    from    $($ServerListTable) as sbhss
+    where   sbhss.ServerName = '$($SourceServerToUpdate)';
+        
+"@
+    }
+
+    else {
+        $query = @"
             
     update  sbhss
     set     sbhss.LastETLDatetime = '$($MaxETLDateTime)'
@@ -35,6 +50,8 @@ Function Update-LastETLDateTimeForServer {
     where   sbhss.ServerName = '$($SourceServerToUpdate)';
         
 "@
+    }
+    
 
     try {
 
@@ -64,7 +81,7 @@ Function Update-LastETLDateTimeForServer {
         Write-Error "Failed to update max ETLDateTime for SourceServer: $SourceServerToUpdate on target Server: $ServerInstance"
         Write-Error "Error Message: $_.Exception.Message"
 
-        if($conn){
+        if ($conn) {
             $conn.Close()
         }
 
