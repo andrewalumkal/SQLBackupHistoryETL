@@ -24,7 +24,6 @@ Function Invoke-SQLBackupHistoryETL {
         $SourceCredentialObject,
 
         [Parameter(Mandatory = $false)]
-        [ValidateNotNullOrEmpty()]
         $ServerListTable
 
     )
