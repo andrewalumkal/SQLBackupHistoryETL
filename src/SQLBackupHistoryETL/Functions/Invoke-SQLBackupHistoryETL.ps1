@@ -62,6 +62,7 @@ Function Invoke-SQLBackupHistoryETL {
                 -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth `
                 -SourceServerToUpdate $SourceServer.ServerName `
                 -MaxETLDateTime $MaxETLDateTime `
+                -ServerListTable $ServerListTable
     
         }
 
