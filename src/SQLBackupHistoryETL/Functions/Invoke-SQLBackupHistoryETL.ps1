@@ -21,7 +21,11 @@ Function Invoke-SQLBackupHistoryETL {
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
         [pscredential]
-        $SourceCredentialObject
+        $SourceCredentialObject,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        $ServerListTable
 
     )
   
@@ -29,7 +33,8 @@ Function Invoke-SQLBackupHistoryETL {
     $AllSourceServers = Get-AllSourceServersToETL -TargetServerInstance $TargetServerInstance `
         -TargetDatabase $TargetDatabase `
         -TargetCredentialObject $TargetCredentialObject `
-        -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth
+        -TargetAzureDBCertificateAuth $TargetAzureDBCertificateAuth `
+        -ServerListTable $ServerListTable
 
     foreach ($SourceServer in $AllSourceServers) {
 

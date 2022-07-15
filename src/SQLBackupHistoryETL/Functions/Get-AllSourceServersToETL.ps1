@@ -14,17 +14,35 @@ Function Get-AllSourceServersToETL {
         $TargetCredentialObject,
 
         [Parameter(Mandatory = $false)]
-        $TargetAzureDBCertificateAuth
+        $TargetAzureDBCertificateAuth,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        $ServerListTable
 
     )
-  
-    $query = @"
+    
+    if ($ServerListTable) {
+        $query = @"
+            
+    select  sbhss.ServerName
+            ,sbhss.LastETLDatetime
+    from    $($ServerListTable) as sbhss;
+        
+"@
+
+    }
+
+    else {
+        $query = @"
             
     select  sbhss.ServerName
             ,sbhss.LastETLDatetime
     from    Utility.SQLBackupHistorySourceServers as sbhss;
         
 "@
+    }
+    
 
     try {
 
@@ -56,7 +74,7 @@ Function Get-AllSourceServersToETL {
         Write-Error "Failed to retrieve servers to ETL from Server: $ServerInstance"
         Write-Error "Error Message: $_.Exception.Message"
 
-        if($conn){
+        if ($conn) {
             $conn.Close()
         }
 
