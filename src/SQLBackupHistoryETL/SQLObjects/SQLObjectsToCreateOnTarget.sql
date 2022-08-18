@@ -22,6 +22,9 @@ create table Utility.SQLBackupHistoryConsolidated
    ,[is_copy_only]         bit            null
    ,[encryptor_type]       nvarchar(32)   null
    ,[key_algorithm]        nvarchar(32)   null
+   ,[device_type]		   tinyint        null
+   ,[position]			   int            null
+   ,[DBFileInformation]    nvarchar(max)  null
 )
 with (data_compression = page);
 

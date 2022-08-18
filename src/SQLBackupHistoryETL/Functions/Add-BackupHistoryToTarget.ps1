@@ -84,7 +84,10 @@ Function Add-BackupHistoryToTarget {
                                                 ,@CompressedSizeMB = $($HistoryRecord.CompressedSizeMB)
                                                 ,@is_copy_only = $($HistoryRecord.is_copy_only)
                                                 ,@encryptor_type = N'$($HistoryRecord.encryptor_type)'
-                                                ,@key_algorithm = N'$($HistoryRecord.key_algorithm)'; 
+                                                ,@key_algorithm = N'$($HistoryRecord.key_algorithm)'
+                                                ,@device_type = N'$($HistoryRecord.device_type)'
+                                                ,@position = N'$($HistoryRecord.position)'
+                                                ,@DBFileInformation = N'$($HistoryRecord.DBFileInformation)'; 
         
 "@
 
