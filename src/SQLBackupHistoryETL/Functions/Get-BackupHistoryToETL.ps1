@@ -44,6 +44,10 @@ Function Get-BackupHistoryToETL {
             ,s.is_copy_only
             ,s.encryptor_type
             ,s.key_algorithm
+            ,m.device_type
+			,s.position
+			,bf.DBFileInformation
+
     from        msdb.dbo.backupset s
     join        msdb.dbo.backupmediafamily m
     on          s.media_set_id = m.media_set_id
@@ -57,6 +61,13 @@ Function Get-BackupHistoryToETL {
 
     left join   #tmp_availability_groups as grp
     on          grp.group_id = rs.group_id
+
+    outer apply (	select b.logical_name,b.physical_drive,b.physical_name,b.file_type,b.file_number
+					from msdb.dbo.backupfile as b
+					where	b.backup_set_id = s.backup_set_id
+					and b.state <> 8 --not dropped
+					for json path
+					) bf(DBFileInformation)
 
     where       s.backup_finish_date >= '$($LastETLDateTIme)'
     order by    s.backup_finish_date asc;
