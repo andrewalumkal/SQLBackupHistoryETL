@@ -84,7 +84,7 @@ exec Utility.GenerateRestoreScript @SourceDB = 'DBAdmin'
 exec Utility.GenerateRestoreScript @SourceDB = 'DBAdminAG1'
                                   ,@SourceAGName = 'AG1'
 ```
-#### Example 2 - AG Database
+#### Example 2 - AG Database with additional options
 ```sql
 exec Utility.GenerateRestoreScript @SourceDB = 'DBAdminAG1'
                                   ,@DestinationDB = 'DBAdminAG1_Restored'
