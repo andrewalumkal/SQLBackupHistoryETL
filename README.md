@@ -77,7 +77,7 @@ exec Utility.GenerateRestoreScript @Help = 1
 #### Example - Standalone Database
 ```sql
 exec Utility.GenerateRestoreScript @SourceDB = 'DBAdmin'
-                                  ,@SourceAGName = 'SQLNODE5236'
+                                  ,@SourceDBServer = 'SQLNODE5236'
 ```
 #### Example - AG Database
 ```sql
