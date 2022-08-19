@@ -65,3 +65,32 @@ Invoke-SQLBackupHistoryETL -TargetServerInstance $TargetServerInstance `
                             -TargetDatabase $TargetDatabase
 ```
 
+## Generate restore script
+
+Restore scripts can be generated directly from the central server using a stored procedure. Supports Full, Diff, Log restores to point in time along with options to move SQL files to different drive locations.
+
+#### Use @Help for instructions
+```sql
+exec Utility.GenerateRestoreScript @Help = 1
+```
+
+#### Example - Standalone Database
+```sql
+exec Utility.GenerateRestoreScript @SourceDB = 'DBAdmin'
+                                  ,@SourceAGName = 'SQLNODE5236'
+```
+#### Example - AG Database
+```sql
+exec Utility.GenerateRestoreScript @SourceDB = 'DBAdminAG1'
+                                  ,@SourceAGName = 'AG1'
+```
+#### Example 2 - AG Database
+```sql
+exec Utility.GenerateRestoreScript @SourceDB = 'DBAdminAG1'
+                                  ,@DestinationDB = 'DBAdminAG1_Restored'
+                                  ,@SourceAGName = 'AG1'
+                                  ,@RestoreToTime = '2022-07-19 19:30:27'
+                                  ,@RestoreDataPath = 'X\MSSQL\DATA'
+                                  ,@RestoreLogPath = 'Y\MSSQL\Log'
+                                  ,@FileNamePrefix = 'zRestored_'
+```
