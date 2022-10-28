@@ -424,7 +424,7 @@ end
 go
 
 
-create or alter proc Utility.GenerateRestoreScript
+alter proc Utility.GenerateRestoreScript
     @SourceDB        varchar(200) = null
    ,@DestinationDB   varchar(200) = null
    ,@SourceDBServer  varchar(200) = null
@@ -568,7 +568,8 @@ begin
              where  sbhc.BackupType = 'Full'
              and    sbhc.database_name = @SourceDB
              and    sbhc.ag_name = @SourceAGName
-             and    sbhc.backup_start_date <= @RestoreToTime)
+             and    sbhc.backup_start_date <= @RestoreToTime
+			 and	sbhc.device_type in (2,9))
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -624,7 +625,8 @@ begin
              where  sbhc.BackupType = 'Full'
              and    sbhc.database_name = @SourceDB
              and    sbhc.server_name = @SourceDBServer
-             and    sbhc.backup_start_date <= @RestoreToTime)
+             and    sbhc.backup_start_date <= @RestoreToTime
+			 and	sbhc.device_type in (2,9))
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -751,7 +753,7 @@ begin
                             ,df.FileName) end as FullFilePath
         from    #DBFiles as df)
     select  @MoveCommand
-        = string_agg (
+        = string_agg (cast(N'' as nvarchar(max)) +
               ('MOVE N''' + fm.logical_name + ''' TO N''' + fm.FullFilePath
                + '''')
              ,(', ' + char (13)))
@@ -764,7 +766,7 @@ begin
 
     select  @RestoreCommand
         = N'RESTORE DATABASE [' + @DestinationDB + N'] FROM ' + char (13)
-          + string_agg (
+          + string_agg (cast(N'' as nvarchar(max)) +
                 concat (
                     case when b.device_type = 9 then 'URL = N''' else
                                                                      'DISK = N''' end
@@ -776,7 +778,7 @@ begin
           ------------MOVE COMMAND----------' +
           + char (13) + N',NORECOVERY,  NOUNLOAD,  STATS = 5;'
            ,@ConcatenatedPhysicalDevice
-                = string_agg (b.physical_device_name, ', ')
+                = string_agg (cast(N'' as nvarchar(max)) + b.physical_device_name, ', ')
     from    #Backups as b;
 
     insert into #AllBackupsToRestore (HistoryLogID
@@ -967,7 +969,7 @@ begin
 
         select  @RestoreCommand
             = N'RESTORE DATABASE [' + @DestinationDB + N'] FROM ' + char (13)
-              + string_agg (
+              + string_agg (cast(N'' as nvarchar(max)) +
                     concat (
                         case when b.device_type = 9 then 'URL = N''' else
                                                                          'DISK = N''' end
@@ -1252,4 +1254,4 @@ begin
     end;
 
 end;
-go
+GO
