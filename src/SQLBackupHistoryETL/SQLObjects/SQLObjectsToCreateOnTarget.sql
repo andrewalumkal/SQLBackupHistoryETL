@@ -424,7 +424,7 @@ end
 go
 
 
-alter proc Utility.GenerateRestoreScript
+create or alter proc Utility.GenerateRestoreScript
     @SourceDB        varchar(200) = null
    ,@DestinationDB   varchar(200) = null
    ,@SourceDBServer  varchar(200) = null
@@ -569,7 +569,7 @@ begin
              and    sbhc.database_name = @SourceDB
              and    sbhc.ag_name = @SourceAGName
              and    sbhc.backup_start_date <= @RestoreToTime
-			 and	sbhc.device_type in (2,9))
+	     and    sbhc.device_type in (2,9))
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -626,7 +626,7 @@ begin
              and    sbhc.database_name = @SourceDB
              and    sbhc.server_name = @SourceDBServer
              and    sbhc.backup_start_date <= @RestoreToTime
-			 and	sbhc.device_type in (2,9))
+	     and    sbhc.device_type in (2,9))
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
