@@ -424,7 +424,7 @@ end
 go
 
 
-create or alter proc Utility.GenerateRestoreScript
+alter proc Utility.GenerateRestoreScript
     @SourceDB        varchar(200) = null
    ,@DestinationDB   varchar(200) = null
    ,@SourceDBServer  varchar(200) = null
@@ -492,11 +492,6 @@ begin
     begin
         ; throw 50000, 'For standalone source DB''s, only provide @SourceDBServer. For AG source DB''s, only provide @SourceAGName. Execute ''exec Utility.GenerateRestoreScript @Help = 1'' for more information', 1;
     end;
-
-	if (@DestinationDB is null or @DestinationDB = '')
-	begin
-		set @DestinationDB = @SourceDB
-	end
 
     if @SourceDBServer is null
     begin
@@ -569,7 +564,7 @@ begin
              and    sbhc.database_name = @SourceDB
              and    sbhc.ag_name = @SourceAGName
              and    sbhc.backup_start_date <= @RestoreToTime
-	     and    sbhc.device_type in (2,9))
+			 and	sbhc.device_type in (2,9))
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -626,7 +621,7 @@ begin
              and    sbhc.database_name = @SourceDB
              and    sbhc.server_name = @SourceDBServer
              and    sbhc.backup_start_date <= @RestoreToTime
-	     and    sbhc.device_type in (2,9))
+			 and	sbhc.device_type in (2,9))
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -680,6 +675,13 @@ begin
         ; throw 50000, 'No available full backups found', 1;
         return;
     end;
+
+	--If @DestinationDB is not provided, get the database name from backups to match the case when restoring to a new server
+	if (@DestinationDB is null or @DestinationDB = '')
+	begin
+		select top (1) @DestinationDB = b.database_name
+		from #Backups as b
+	end
 
     ----Get moveto file information
 
@@ -1254,4 +1256,6 @@ begin
     end;
 
 end;
+
+
 GO
