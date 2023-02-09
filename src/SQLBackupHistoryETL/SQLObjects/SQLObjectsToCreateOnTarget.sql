@@ -424,7 +424,7 @@ end
 go
 
 
-alter proc Utility.GenerateRestoreScript
+create or alter proc Utility.GenerateRestoreScript
     @SourceDB        varchar(200) = null
    ,@DestinationDB   varchar(200) = null
    ,@SourceDBServer  varchar(200) = null
