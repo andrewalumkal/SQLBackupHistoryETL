@@ -767,7 +767,8 @@ begin
     declare @RestoreCommand nvarchar(max);
 
     select  @RestoreCommand
-        = N'RESTORE DATABASE [' + @DestinationDB + N'] FROM ' + char (13)
+        =  N'--execute as login = ''sa''' + char (13) + 'go' + char (13) + char (13)
+			+ N'RESTORE DATABASE [' + @DestinationDB + N'] FROM ' + char (13)
           + string_agg (cast(N'' as nvarchar(max)) +
                 concat (
                     case when b.device_type = 9 then 'URL = N''' else
