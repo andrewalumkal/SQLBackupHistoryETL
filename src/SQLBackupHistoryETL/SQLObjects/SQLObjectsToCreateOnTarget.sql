@@ -443,7 +443,8 @@ begin
 
     declare @last_lsn                   [numeric](25, 0)
            ,@ConcatenatedPhysicalDevice nvarchar(max)
-           ,@IsAGDB                     bit;
+           ,@IsAGDB                     bit
+		   ,@RestoreTimeProvided		bit = iif(@RestoreToTime is null,0,1);
 
     if (@Help = 1)
     begin
@@ -1045,6 +1046,7 @@ begin
 
         ;with cte
          as (select *
+			 ,min(sbhc.LogID) over(partition by sbhc.first_lsn,sbhc.last_lsn) as LogIDPartitioned --Get only 1 logid for a striped log backup
              from   Utility.SQLBackupHistoryConsolidated as sbhc with (forceseek)
              where  sbhc.BackupType = 'Log'
              and    sbhc.last_lsn > @last_lsn
@@ -1054,12 +1056,13 @@ begin
              union
              --Get the first log backup after @RestoreToTime to get any overlap data in the next backup
              select top (1) *
+			 ,min(sbhc.LogID) over(partition by sbhc.first_lsn,sbhc.last_lsn) as LogIDPartitioned --Get only 1 logid for a striped log backup
              from   Utility.SQLBackupHistoryConsolidated as sbhc with (forceseek)
              where  sbhc.BackupType = 'Log'
              and    sbhc.last_lsn > @last_lsn
              and    sbhc.database_name = @SourceDB
              and    sbhc.ag_name = @SourceAGName
-             and    sbhc.backup_start_date >= @RestoreToTime)
+             and    sbhc.backup_start_date > @RestoreToTime)
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -1079,10 +1082,16 @@ begin
                              ,device_type
                              ,position
                              ,DBFileInformation)
-        select  bh.LogID
+        select  bh.LogIDPartitioned as LogID
                ,bh.database_name
                ,bh.BackupType
-               ,bh.physical_device_name
+               ,string_agg (cast(N'' as nvarchar(max)) +
+                    concat (
+                        case when bh.device_type = 9 then 'URL = N''' else
+                                                                         'DISK = N''' end
+                       ,bh.physical_device_name
+                       ,'''')
+                   ,',' + ' ' + char (13)) as physical_device_name
                ,bh.backup_start_date
                ,bh.backup_finish_date
                ,bh.server_name
@@ -1099,6 +1108,24 @@ begin
                ,bh.position
                ,bh.DBFileInformation
         from    cte as bh
+		group by bh.LogIDPartitioned
+                ,bh.database_name
+                ,bh.BackupType
+                ,bh.backup_start_date
+                ,bh.backup_finish_date
+                ,bh.server_name
+                ,bh.ag_name
+                ,bh.recovery_model
+                ,bh.first_lsn
+                ,bh.last_lsn
+                ,bh.UncompressedSizeMB
+                ,bh.CompressedSizeMB
+                ,bh.is_copy_only
+                ,bh.encryptor_type
+                ,bh.key_algorithm
+                ,bh.device_type
+                ,bh.position
+                ,bh.DBFileInformation
         option (fast 1);
     end;
     --Else check using ServerName
@@ -1106,6 +1133,7 @@ begin
     begin
         ;with cte
          as (select *
+			 ,min(sbhc.LogID) over(partition by sbhc.first_lsn,sbhc.last_lsn) as LogIDPartitioned --Get only 1 logid for a striped log backup
              from   Utility.SQLBackupHistoryConsolidated as sbhc with (forceseek)
              where  sbhc.BackupType = 'Log'
              and    sbhc.last_lsn > @last_lsn
@@ -1115,12 +1143,13 @@ begin
              union
              --Get the first log backup after @RestoreToTime to get any overlap data in the next backup
              select top (1) *
+			 ,min(sbhc.LogID) over(partition by sbhc.first_lsn,sbhc.last_lsn) as LogIDPartitioned --Get only 1 logid for a striped log backup
              from   Utility.SQLBackupHistoryConsolidated as sbhc with (forceseek)
              where  sbhc.BackupType = 'Log'
              and    sbhc.last_lsn > @last_lsn
              and    sbhc.database_name = @SourceDB
              and    sbhc.server_name = @SourceDBServer
-             and    sbhc.backup_start_date >= @RestoreToTime)
+             and    sbhc.backup_start_date > @RestoreToTime)
         insert into #Backups (LogID
                              ,database_name
                              ,BackupType
@@ -1140,10 +1169,16 @@ begin
                              ,device_type
                              ,position
                              ,DBFileInformation)
-        select  bh.LogID
+        select  bh.LogIDPartitioned
                ,bh.database_name
                ,bh.BackupType
-               ,bh.physical_device_name
+               ,string_agg (cast(N'' as nvarchar(max)) +
+                    concat (
+                        case when bh.device_type = 9 then 'URL = N''' else
+                                                                         'DISK = N''' end
+                       ,bh.physical_device_name
+                       ,'''')
+                   ,',' + ' ' + char (13)) as physical_device_name
                ,bh.backup_start_date
                ,bh.backup_finish_date
                ,bh.server_name
@@ -1160,6 +1195,24 @@ begin
                ,bh.position
                ,bh.DBFileInformation
         from    cte as bh
+		group by bh.LogIDPartitioned
+                ,bh.database_name
+                ,bh.BackupType
+                ,bh.backup_start_date
+                ,bh.backup_finish_date
+                ,bh.server_name
+                ,bh.ag_name
+                ,bh.recovery_model
+                ,bh.first_lsn
+                ,bh.last_lsn
+                ,bh.UncompressedSizeMB
+                ,bh.CompressedSizeMB
+                ,bh.is_copy_only
+                ,bh.encryptor_type
+                ,bh.key_algorithm
+                ,bh.device_type
+                ,bh.position
+                ,bh.DBFileInformation
         option (fast 1);
     end;
 
@@ -1186,9 +1239,7 @@ begin
                    ,b.database_name as DatabaseName
                    ,b.BackupType
                    ,N'RESTORE LOG [' + @DestinationDB + N'] FROM '
-                    + case when b.device_type = 9 then 'URL = N''' else
-                                                                       'DISK = N''' end
-                    + b.physical_device_name + ''' WITH FILE = '
+                    + b.physical_device_name + ' WITH FILE = '
                     + cast(b.position as varchar(50))
                     + ',NORECOVERY, NOUNLOAD, STATS = 10;' as RestoreCommand
                    ,b.physical_device_name
@@ -1208,16 +1259,18 @@ begin
         order by    b.last_lsn asc;
 
         ---Update last 2 log restore command to have STOP AT Option (updating 2 to be safe)
-
-        declare @StopAt nvarchar(500)
-            = N', STOPAT = ''' + cast(@RestoreToTime as varchar(50)) + N''';';
-        with cte
-        as (select      top (2) abtr.RestoreCommand
-            from        #AllBackupsToRestore as abtr
-            where       abtr.BackupType = 'Log'
-            order by    abtr.RestoreID desc)
-        update  cte
-        set     cte.RestoreCommand = replace (cte.RestoreCommand, ';', @StopAt);
+		if @RestoreTimeProvided = 1
+		begin
+			declare @StopAt nvarchar(500)
+				= N', STOPAT = ''' + cast(@RestoreToTime as varchar(50)) + N''';';
+			with cte
+			as (select      top (2) abtr.RestoreCommand
+				from        #AllBackupsToRestore as abtr
+				where       abtr.BackupType = 'Log'
+				order by    abtr.RestoreID desc)
+			update  cte
+			set     cte.RestoreCommand = replace (cte.RestoreCommand, ';', @StopAt);
+		end
 
     end;
 
