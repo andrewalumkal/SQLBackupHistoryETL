@@ -58,11 +58,11 @@ Function Get-AllSourceServersToETL {
         }
 
         elseif ($TargetCredentialObject) {
-            $SourceServers = Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $TargetCredentialObject -ErrorAction Stop
+            $SourceServers = Invoke-SqlCmd -TrustServerCertificate -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $TargetCredentialObject -ErrorAction Stop
         }
 
         else {
-            $SourceServers = Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -ErrorAction Stop
+            $SourceServers = Invoke-SqlCmd -TrustServerCertificate -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -ErrorAction Stop
         }
 
         return $SourceServers

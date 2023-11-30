@@ -68,11 +68,11 @@ Function Update-LastETLDateTimeForServer {
         }
         
         elseif ($TargetCredentialObject) {
-            Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $TargetCredentialObject -ErrorAction Stop
+            Invoke-SqlCmd -TrustServerCertificate -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -Credential $TargetCredentialObject -ErrorAction Stop
         }
 
         else {
-            Invoke-Sqlcmd -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -ErrorAction Stop
+            Invoke-SqlCmd -TrustServerCertificate -ServerInstance $TargetServerInstance -query $query -Database $TargetDatabase -ErrorAction Stop
         }
 
     }
