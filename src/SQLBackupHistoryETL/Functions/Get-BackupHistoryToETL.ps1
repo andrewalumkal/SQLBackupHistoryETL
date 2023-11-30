@@ -77,11 +77,11 @@ Function Get-BackupHistoryToETL {
     try {
 
         if ($CredentialObject) {
-            $BackupHistory = Invoke-Sqlcmd -ServerInstance $ServerInstance -query $query -Database msdb -Credential $CredentialObject -ErrorAction Stop
+            $BackupHistory = Invoke-SqlCmd -TrustServerCertificate -ServerInstance $ServerInstance -query $query -Database msdb -Credential $CredentialObject -ErrorAction Stop
         }
 
         else {
-            $BackupHistory = Invoke-Sqlcmd -ServerInstance $ServerInstance -query $query -Database msdb -ErrorAction Stop
+            $BackupHistory = Invoke-SqlCmd -TrustServerCertificate -ServerInstance $ServerInstance -query $query -Database msdb -ErrorAction Stop
         }
 
         return $BackupHistory
