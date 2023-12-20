@@ -35,7 +35,7 @@ Function Add-BackupHistoryToTarget {
                 -DatabaseName $TargetDatabase `
                 -TenantID $TargetAzureDBCertificateAuth.TenantID `
                 -ClientID $TargetAzureDBCertificateAuth.ClientID `
-                -FullCertificatePath $TargetAzureDBCertificateAuth.FullCertificatePath
+                -CertificateThumbprint $TargetAzureDBCertificateAuth.CertificateThumbprint
 
         }
         
