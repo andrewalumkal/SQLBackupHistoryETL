@@ -60,7 +60,7 @@ Function Update-LastETLDateTimeForServer {
                 -DatabaseName $TargetDatabase `
                 -TenantID $TargetAzureDBCertificateAuth.TenantID `
                 -ClientID $TargetAzureDBCertificateAuth.ClientID `
-                -FullCertificatePath $TargetAzureDBCertificateAuth.FullCertificatePath
+                -CertificateThumbprint $TargetAzureDBCertificateAuth.CertificateThumbprint
 
             #Using Invoke-Sqlcmd2 to be able to pass in an existing connection
             Invoke-Sqlcmd2 -SQLConnection $conn -query $query -ErrorAction Stop
